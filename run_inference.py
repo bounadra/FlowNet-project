@@ -114,7 +114,7 @@ def main():
         test_files = data_dir.files("*1.{}".format(ext))
         for file in test_files:
             img_pair = file.parent / (file.stem[:-1] + "2.{}".format(ext))
-            if img_pair.isfile():
+            if img_pair.is_file():
                 img_pairs.append([file, img_pair])
 
     print("{} samples found".format(len(img_pairs)))
