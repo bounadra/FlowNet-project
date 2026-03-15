@@ -76,8 +76,34 @@ parser.add_argument(
     action="store_true",
     help="if set, will output invert flow (from 1 to 0) along with regular flow",
 )
+parser.add_argument(
+    "--sequence",
+    action="store_true",
+    help="if set, build consecutive pairs from sequence files like 00000.jpg, 00001.jpg, ...",
+)
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+
+def find_named_pairs(data_dir, img_exts):
+    img_pairs = []
+    for ext in img_exts:
+        test_files = data_dir.files("*1.{}".format(ext))
+        for file in test_files:
+            img_pair = file.parent / (file.stem[:-1] + "2.{}".format(ext))
+            if img_pair.is_file():
+                img_pairs.append([file, img_pair])
+    return img_pairs
+
+
+def find_sequence_pairs(data_dir, img_exts):
+    img_pairs = []
+    for ext in img_exts:
+        sequence_files = [f for f in data_dir.files("*.{}".format(ext)) if f.stem.isdigit()]
+        sequence_files = sorted(sequence_files, key=lambda x: int(x.stem))
+        for i in range(len(sequence_files) - 1):
+            img_pairs.append([sequence_files[i], sequence_files[i + 1]])
+    return img_pairs
 
 
 @torch.no_grad()
@@ -109,13 +135,10 @@ def main():
         ]
     )
 
-    img_pairs = []
-    for ext in args.img_exts:
-        test_files = data_dir.files("*1.{}".format(ext))
-        for file in test_files:
-            img_pair = file.parent / (file.stem[:-1] + "2.{}".format(ext))
-            if img_pair.is_file():
-                img_pairs.append([file, img_pair])
+    if args.sequence:
+        img_pairs = find_sequence_pairs(data_dir, args.img_exts)
+    else:
+        img_pairs = find_named_pairs(data_dir, args.img_exts)
 
     print("{} samples found".format(len(img_pairs)))
     # create model
@@ -147,7 +170,11 @@ def main():
                 output, size=img1.size()[-2:], mode=args.upsampling, align_corners=False
             )
         for suffix, flow_output in zip(["flow", "inv_flow"], output):
-            filename = save_path / "{}{}".format(img1_file.stem[:-1], suffix)
+            if args.sequence:
+                pair_stem = "{}_{}".format(img1_file.stem, img2_file.stem)
+            else:
+                pair_stem = img1_file.stem[:-1]
+            filename = save_path / "{}{}".format(pair_stem, suffix)
             if args.output_value in ["vis", "both"]:
                 rgb_flow = flow2rgb(
                     args.div_flow * flow_output, max_value=args.max_flow
