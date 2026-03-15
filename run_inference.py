@@ -166,9 +166,14 @@ def main():
         # compute output
         output = model(input_var)
         if args.upsampling is not None:
-            output = F.interpolate(
-                output, size=img1.size()[-2:], mode=args.upsampling, align_corners=False
-            )
+            interpolate_kwargs = {
+                "size": img1.size()[-2:],
+                "mode": args.upsampling,
+            }
+            if args.upsampling != "nearest":
+                interpolate_kwargs["align_corners"] = False
+            output = F.interpolate(output, **interpolate_kwargs)
+
         for suffix, flow_output in zip(["flow", "inv_flow"], output):
             if args.sequence:
                 pair_stem = "{}_{}".format(img1_file.stem, img2_file.stem)
