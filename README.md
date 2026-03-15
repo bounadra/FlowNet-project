@@ -120,6 +120,15 @@ Your folder needs to have all the images pairs in the same location, with the na
 ```bash
 python3 run_inference.py /path/to/images/folder /path/to/pretrained
 ```
+You can also run inference in sequence mode (consecutive numbered frames):
+
+```
+00000.{ext}, 00001.{ext}, 00002.{ext} ...
+```
+
+```bash 
+python3 run_inference.py /path/to/images/folder /path/to/pretrained --sequence
+```
 
 As for the `main.py` script, a help menu is available for additional options.
 
