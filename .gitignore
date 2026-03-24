@@ -1,3 +1,2 @@
-*/_pycache__
-*.pyc
-*/pre-trained_models/FlowNetS/flownets_EPE1.951.pth
+FlowNet/pre-trained_models/FlowNetC/flownetc_EPE1.766.pth
+FlowNet/pre-trained_models/FlowNetS/flownets_EPE1.951.pth
